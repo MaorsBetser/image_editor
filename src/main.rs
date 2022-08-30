@@ -48,8 +48,7 @@ fn main() {
 
 
         let mut target = display.draw();
-        target.clear_color(1.0, 0.0, 0.0, 1.0);
-        t = move_ferris(t);
+        target.clear_color(0.5, 0.5, 0.8, 1.0);
         let uniforms = uniform! {
             matrix: [
                 [0.5 + t, 0.0, 0.0, 0.0],
@@ -59,23 +58,26 @@ fn main() {
             ],
             tex: &texture,
         };
-        
+        let params = glium::DrawParameters {
+            blend: glium::Blend::alpha_blending(),
+            .. Default::default()
+        };
 
         target.draw(&shape,
             glium::index::NoIndices(glium::index::PrimitiveType::TriangleStrip),
             &program,
             &uniforms,
-            &Default::default()).unwrap();
+            &params).unwrap();
         target.finish().unwrap();
     });
 
 }
-fn build_image(display : &glium::Display) -> glium::texture::SrgbTexture2d{
+fn build_image(display : &glium::Display) -> glium::texture::CompressedSrgbTexture2d{
     let image = image::load(Cursor::new(&include_bytes!("../assets/ferris.png")),
         image::ImageFormat::Png).unwrap().to_rgba8();
     let image_dimensions = image.dimensions();
     let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions);
-    let diffuse_tex = glium::texture::SrgbTexture2d::new(display, image).unwrap();
+    let diffuse_tex = glium::texture::CompressedSrgbTexture2d::new(display, image).unwrap();
     diffuse_tex
 }
 fn build_shape(display: &glium::Display) -> glium::VertexBuffer<Vertex>{
@@ -86,10 +88,4 @@ fn build_shape(display: &glium::Display) -> glium::VertexBuffer<Vertex>{
         Vertex { position: [ 1.0, -1.0], tex_coords: [1.0, 0.0]},
     ]).unwrap();
     shape
-}
-fn move_ferris(mut t : f32)-> f32 {
-    if t > 1.0 {
-        t = 0.0;
-    }
-    t+0.002
 }
